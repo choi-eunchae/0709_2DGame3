@@ -20,7 +20,7 @@ public class GameManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // 씬이 바뀌어도 파괴되지 않음
+            //DontDestroyOnLoad(gameObject); // 씬이 바뀌어도 파괴되지 않음
             retryButton.SetActive(false);
             gameOverPanel.SetActive(false);
         }
@@ -100,10 +100,8 @@ void SaveScore(int score)
     public void Retry()
     {
         Time.timeScale = 1f; // 멈춘 시간 되돌리기
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); // 현재 씬 다시 로드
-        textMeshProCoin.SetText(coin.ToString());  // UI도 초기화
         coin = 0; // 코인 리셋 (필요 시)
+        textMeshProCoin.SetText(coin.ToString());  // UI도 초기화
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); // 현재 씬 다시 로드 
     }
-    
-    
 }
