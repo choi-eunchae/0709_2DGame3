@@ -22,21 +22,31 @@ public class EnemyRespawner : MonoBehaviour
 
         while(true)
         {
-                for (int i = 0; i < arrPosx.Length; i++)
-                {
-                    SpawnEnemy(arrPosx[i], currentEnemyIndex, moveSpeed);
-                }
-                spawncount++;
+            for (int i = 0; i < arrPosx.Length; i++)
+            {
+                int spawnIndex;
 
-                if (spawncount % 2 == 0)
+                // 아직 배열 끝까지 안 갔으면 순서대로
+                if (currentEnemyIndex < Enemies.Length)
                 {
-                    currentEnemyIndex++;
-                    if (currentEnemyIndex >= Enemies.Length)
-                    {
-                        currentEnemyIndex = Enemies.Length - 1;
-                    }
-                    moveSpeed += 2;
+                    spawnIndex = currentEnemyIndex;
                 }
+                else
+                {
+                    // 배열 끝까지 갔으면 랜덤으로
+                    spawnIndex = Random.Range(0, Enemies.Length);
+                }
+
+                SpawnEnemy(arrPosx[i], spawnIndex, moveSpeed);
+            }
+
+        spawncount++;
+
+        if (spawncount % 2 == 0)
+        {
+            currentEnemyIndex++;
+            moveSpeed += 2; // 속도 증가
+        }
                 yield return new WaitForSeconds(spawnInterval);
             
         }

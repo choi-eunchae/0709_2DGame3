@@ -10,8 +10,11 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI textMeshProCoin; // 코인 개수를 표시할 텍스트
     public static GameManager Instance { get; private set; } // 싱글톤 인스턴스
     public GameObject gameOverPanel; // 게임 오버 UI 패널
+    public GameObject gameClearPanel; // 게임 클리어 UI 패널
     public GameObject retryButton;
     public TextMeshProUGUI[] top3Texts; // 탑3 기록 표시용 텍스트 배열
+    public int clearCoinTarget = 80; // 클리어 조건 (100코인)
+
 
 
     void Awake()
@@ -23,10 +26,13 @@ public class GameManager : MonoBehaviour
             //DontDestroyOnLoad(gameObject); // 씬이 바뀌어도 파괴되지 않음
             retryButton.SetActive(false);
             gameOverPanel.SetActive(false);
+            if (gameClearPanel != null)
+                gameClearPanel.SetActive(false);
         }
         else
         {
             Destroy(gameObject); // 이미 인스턴스가 있으면 중복 파괴
+            Instance = this;     // 새 인스턴스로 교체
         }
     }
 
@@ -46,6 +52,11 @@ public class GameManager : MonoBehaviour
                 player.MissileUp(); // 2개마다 미사일 업그레이드
             }
         }
+        // 클리어 조건 체크
+        if (coin >= clearCoinTarget)
+        {   Debug.Log("클리어 조건 달성!"); // 추가
+            GameClear();
+        }
     }
 
     // 게임 오버 처리
@@ -57,6 +68,24 @@ public class GameManager : MonoBehaviour
 
         SaveScore(coin);
         DisplayTop3();
+
+        Time.timeScale = 0f; // 게임 멈춤
+    }
+
+     // 게임 클리어 처리
+    public void GameClear()
+    {
+        Debug.Log("게임 클리어!");
+        if (gameClearPanel != null)
+        {
+            gameClearPanel.SetActive(true);
+        }
+        retryButton.SetActive(true);
+
+        SaveScore(coin);
+        DisplayTop3();
+
+        Time.timeScale = 0f; // 게임 멈춤
     }
 
     void ShowRetryButton()
@@ -100,8 +129,8 @@ public class GameManager : MonoBehaviour
     public void Retry()
     {
         Time.timeScale = 1f; // 멈춘 시간 되돌리기
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); // 현재 씬 다시 로드
         coin = 0; // 코인 리셋 (필요 시)
-        //textMeshProCoin.SetText(coin.ToString());  // UI도 초기화
+        Debug.Log("게임 다시 시작!");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); // 현재 씬 다시 로드
     }  
 }

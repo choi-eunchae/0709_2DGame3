@@ -26,6 +26,7 @@ public class Player : MonoBehaviour
 
     // 애니메이터 컴포넌트 참조
     private Animator animator;
+    
 
     void Start()
     {
@@ -39,6 +40,7 @@ public class Player : MonoBehaviour
         Debug.Log("Horizontal Input: " + horizontalInput); // 디버그용 로그 출력
         Vector3 moveTo = new Vector3(horizontalInput, 0, 0);
         transform.position += moveTo * moveSpeed * Time.deltaTime; // 좌우 이동
+        
 
 
         // 애니메이션 상태 변경
@@ -61,11 +63,17 @@ public class Player : MonoBehaviour
     // 미사일 발사 함수
     void Shoot()
     {
-        if (Time.time - lastshotTime > shootInverval)
+        // 위쪽 방향키를 누르면 사방으로 발사
+        if (Input.GetKey(KeyCode.UpArrow))
         {
-            Instantiate(missilePrefab[missIndex], spPostion.position, Quaternion.identity);
-            lastshotTime = Time.time; // 미사일 발사 시간 갱신
+            // 세 방향 발사
+            FireTripleShot();
         }
+        if (Time.time - lastshotTime > shootInverval)
+            {
+                Instantiate(missilePrefab[missIndex], spPostion.position, Quaternion.identity);
+                lastshotTime = Time.time; // 미사일 발사 시간 갱신
+            }
     }
 
     // 미사일 업그레이드 함수
@@ -83,12 +91,31 @@ public class Player : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
-{
-    if (collision.CompareTag("Enemy")) // 몬스터 태그로 비교
+    // 세 방향 발사 함수
+    void FireTripleShot()
     {
-        Destroy(gameObject); // 플레이어 제거        
-        GameManager.Instance.GameOver();
+        // 발사 각도
+        float[] angles = { 90f, 140f, 35f }; // 가운데, 왼쪽, 오른쪽
+
+        foreach (float angle in angles)
+        {
+            // 각도 계산
+            float dirX = Mathf.Cos(angle * Mathf.Deg2Rad);
+            float dirY = Mathf.Sin(angle * Mathf.Deg2Rad);
+            Vector3 dir = new Vector3(dirX, dirY, 0).normalized;
+
+            // 미사일 생성 및 속도 적용
+            GameObject bullet = Instantiate(missilePrefab[missIndex], spPostion.position, Quaternion.identity);
+            bullet.GetComponent<Rigidbody2D>().linearVelocity = dir * 5f; // 5f는 미사일 속도
+        }
     }
-}
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Enemy")) // 몬스터 태그로 비교
+        {
+            Destroy(gameObject); // 플레이어 제거        
+            GameManager.Instance.GameOver();
+        }
+    }
 }
