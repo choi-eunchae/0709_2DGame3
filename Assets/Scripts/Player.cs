@@ -87,8 +87,8 @@ public class Player : MonoBehaviour
 {
     if (collision.CompareTag("Enemy")) // 몬스터 태그로 비교
     {
+        Destroy(gameObject); // 플레이어 제거        
         GameManager.Instance.GameOver();
-        Destroy(gameObject); // 플레이어 제거
     }
 }
 }
