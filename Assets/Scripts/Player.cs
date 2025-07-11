@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Microsoft.Unity.VisualStudio.Editor;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -26,7 +27,16 @@ public class Player : MonoBehaviour
 
     // 애니메이터 컴포넌트 참조
     private Animator animator;
-    
+
+    public float tripleShotCooldown = 3.0f; // 세 방향 쿨타임
+    public float tripleShotDuration = 5.0f; // 세 방향 연속 발사 시간
+    public bool isTripleShooting = false; // 세 방향 연속 발사 상태
+    public float tripleShotEndTime = 0f; // 세 방향 연속 발사 종료 시간
+    public float lastTripleShotTime = -999f;
+
+    public bool IsTripleShooting => isTripleShooting;
+
+
 
     void Start()
     {
@@ -40,7 +50,7 @@ public class Player : MonoBehaviour
         Debug.Log("Horizontal Input: " + horizontalInput); // 디버그용 로그 출력
         Vector3 moveTo = new Vector3(horizontalInput, 0, 0);
         transform.position += moveTo * moveSpeed * Time.deltaTime; // 좌우 이동
-        
+
 
 
         // 애니메이션 상태 변경
@@ -58,22 +68,43 @@ public class Player : MonoBehaviour
         }
         Shoot(); // 미사일 발사
 
+        if (isTripleShooting && Time.time >= tripleShotEndTime)
+        {
+            isTripleShooting = false;
+            lastTripleShotTime = Time.time; // 쿨타임 시작 시점 갱신
+        }
+        GameManager.Instance.ShowSpecialCool(TripleShotCooldownRemaining);
+        GameManager.Instance.UpdateTripleShotUI();
+
+
     }
 
     // 미사일 발사 함수
     void Shoot()
     {
-        // 위쪽 방향키를 누르면 사방으로 발사
-        if (Input.GetKey(KeyCode.UpArrow))
+        // UpArrow 누르면 세 방향 모드 활성화 (쿨타임 확인)
+        if (Input.GetKeyDown(KeyCode.UpArrow))  // 키를 처음 눌렀을 때만 실행
         {
-            // 세 방향 발사
-            FireTripleShot();
-        }
-        if (Time.time - lastshotTime > shootInverval)
+            if (!isTripleShooting && Time.time - lastTripleShotTime >= tripleShotCooldown)
             {
-                Instantiate(missilePrefab[missIndex], spPostion.position, Quaternion.identity);
-                lastshotTime = Time.time; // 미사일 발사 시간 갱신
+                isTripleShooting = true;
+                tripleShotEndTime = Time.time + tripleShotDuration;
+                lastTripleShotTime = Time.time; // 쿨타임 갱신
             }
+        }
+
+        // 세 방향 연속 발사 모드
+        if (isTripleShooting && Time.time - lastshotTime > shootInverval)
+        {
+            FireTripleShot(); // 세 방향으로 발사
+            lastshotTime = Time.time;
+        }
+
+        if (Time.time - lastshotTime > shootInverval)
+        {
+            Instantiate(missilePrefab[missIndex], spPostion.position, Quaternion.identity);
+            lastshotTime = Time.time; // 미사일 발사 시간 갱신
+        }
     }
 
     // 미사일 업그레이드 함수
@@ -81,14 +112,10 @@ public class Player : MonoBehaviour
     {
         missIndex++; // 미사일 종류 업그레이드
         shootInverval = shootInverval - 0.1f; // 발사 간격 감소(더 빠르게)
-        if (shootInverval <= 0.1f)
-        {
-            shootInverval = 0.1f; // 최소 발사 간격 제한
-        }
+        if (shootInverval < 0.1f)
+            shootInverval = 0.1f;
         if (missIndex >= missilePrefab.Length)
-        {
-            missIndex = missilePrefab.Length - 1; // 인덱스 범위 제한
-        }
+            missIndex = missilePrefab.Length - 1;
     }
 
     // 세 방향 발사 함수
@@ -116,6 +143,24 @@ public class Player : MonoBehaviour
         {
             Destroy(gameObject); // 플레이어 제거        
             GameManager.Instance.GameOver();
+        }
+    }
+
+    public float TripleShotCooldownRemaining
+    {
+        get
+        {
+            float elapsed = Time.time - lastTripleShotTime;
+            return Mathf.Max(0, tripleShotCooldown - elapsed);
+        }
+    }
+
+    public float TripleShotDurationRemaining
+    {
+        get
+        {
+            if (!isTripleShooting) return 0f;
+            return Mathf.Max(0, tripleShotEndTime - Time.time);
         }
     }
 }

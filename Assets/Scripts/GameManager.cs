@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -14,6 +15,8 @@ public class GameManager : MonoBehaviour
     public GameObject retryButton;
     public TextMeshProUGUI[] top3Texts; // 탑3 기록 표시용 텍스트 배열
     public int clearCoinTarget = 80; // 클리어 조건 (100코인)
+    public TextMeshProUGUI tripleShotTimerText; // 쿨타임 및 발사시간 표시용 텍스트
+    public Image CoolTimePanel;
 
 
 
@@ -54,7 +57,8 @@ public class GameManager : MonoBehaviour
         }
         // 클리어 조건 체크
         if (coin >= clearCoinTarget)
-        {   Debug.Log("클리어 조건 달성!"); // 추가
+        {
+            Debug.Log("클리어 조건 달성!"); // 추가
             GameClear();
         }
     }
@@ -72,7 +76,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f; // 게임 멈춤
     }
 
-     // 게임 클리어 처리
+    // 게임 클리어 처리
     public void GameClear()
     {
         Debug.Log("게임 클리어!");
@@ -132,5 +136,34 @@ public class GameManager : MonoBehaviour
         coin = 0; // 코인 리셋 (필요 시)
         Debug.Log("게임 다시 시작!");
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); // 현재 씬 다시 로드
-    }  
+    }
+    public void ShowSpecialCool(float Cooltime)
+    {
+        Player player = FindObjectOfType<Player>();
+        if (player == null) return;
+
+        CoolTimePanel.fillAmount = Cooltime / player.tripleShotCooldown;
+    }
+
+    public void UpdateTripleShotUI()
+    {
+        if (tripleShotTimerText == null) return;
+
+        Player player = FindObjectOfType<Player>();
+        if (player == null) return;
+
+        if (player.isTripleShooting)
+        {
+            float remain = player.TripleShotDurationRemaining;
+            tripleShotTimerText.SetText($"Special Missile: {remain:F1}");
+        }
+        else
+        {
+            float remain = player.TripleShotCooldownRemaining;
+            if (remain > 0)
+                tripleShotTimerText.SetText($"CoolTime: {remain:F1}");
+            else
+                tripleShotTimerText.SetText("Special Ready!");
+        }
+    }
 }
